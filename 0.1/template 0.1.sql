@@ -45,7 +45,7 @@ ALTER TABLE public.versions OWNER TO postgres;
 --
 
 COPY public.versions (_id, created_at, updated_at, build, description) FROM stdin;
-56804fde-3245-4977-9116-19604cb977a4	2023-04-18 19:36:38.41602	\N	0	0.0
+56804fde-3245-4977-9116-19604cb977a4	2023-04-18 19:36:38.41602	\N	1	0.1
 \.
 
 

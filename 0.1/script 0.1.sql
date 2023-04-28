@@ -11,4 +11,4 @@ CREATE TABLE public.versions
 ALTER TABLE IF EXISTS public.versions
     OWNER to postgres;
 	
-INSERT INTO public.versions values (gen_random_uuid(), CURRENT_TIMESTAMP, null, 0, '0.0');
+INSERT INTO public.versions values (gen_random_uuid(), CURRENT_TIMESTAMP, null, 1, '0.1');
