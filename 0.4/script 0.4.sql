@@ -24,3 +24,5 @@ ALTER TABLE IF EXISTS public.users
 
 ALTER TABLE public.users
     ALTER COLUMN pin TYPE character varying COLLATE pg_catalog."default";
+
+INSERT INTO public.versions values (gen_random_uuid(), CURRENT_TIMESTAMP, null, 4, '0.4');
