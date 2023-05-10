@@ -137,7 +137,7 @@ CREATE TABLE public.professionals (
     name character varying NOT NULL,
     is_active boolean NOT NULL,
     company_id uuid,
-    professional_type smallint NOT NULL,
+    professional_type smallint[] NOT NULL,
     keywords tsvector GENERATED ALWAYS AS (to_tsvector('public.pt'::regconfig, (COALESCE(name, ''::character varying))::text)) STORED
 );
 
