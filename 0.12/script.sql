@@ -4,7 +4,7 @@ CREATE TABLE public.activity_logs
     entity character varying NOT NULL,
     operation_type character varying NOT NULL,
     record_id uuid NOT NULL,
-    created_at timestamp without time zone NOT NULL; 
+    created_at timestamp without time zone NOT NULL, 
     changed_by uuid,
     PRIMARY KEY (_id)
 );
