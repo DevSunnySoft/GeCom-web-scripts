@@ -72,8 +72,8 @@ BEGIN
     VALUES (variation_id, 'Padrão', CURRENT_TIMESTAMP, null);
 
     -- Inserts a default size for unique size
-    INSERT INTO public.variations_items (_id, name, created_at, variation_id, max_division, company_id) 
-    VALUES (uuid_generate_v4(), 'Tamanho único', CURRENT_TIMESTAMP, variation_id, 1, null);
+    INSERT INTO public.variations_items (_id, name, created_at, variation_id, max_division, company_id, "index") 
+    VALUES (uuid_generate_v4(), 'Tamanho único', CURRENT_TIMESTAMP, variation_id, 1, null, 0);
 
     -- creates a default config parameter setting the default variation
     INSERT INTO public.config (_id, value, description, company_id, param, created_at) 
@@ -371,7 +371,8 @@ CREATE TABLE public.product_variations (
     product_id uuid NOT NULL,
     name character varying(30),
     variation_name character varying(30),
-    cost_value numeric(12,2) DEFAULT 0 NOT NULL
+    cost_value numeric(12,2) DEFAULT 0 NOT NULL,
+    index smallint
 );
 
 
@@ -401,7 +402,10 @@ CREATE TABLE public.products (
     enable_online_sale boolean DEFAULT true NOT NULL,
     company_id uuid,
     enable_stock_control boolean DEFAULT false,
-    stock_movement_event smallint DEFAULT 0 NOT NULL
+    stock_movement_event smallint DEFAULT 0 NOT NULL,
+    picture_url character varying,
+    thumbnail_url character varying,
+    max_qtd numeric(12,3)
 );
 
 
@@ -416,7 +420,7 @@ CREATE TABLE public.products_categories (
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone,
     category_id uuid NOT NULL,
-    productid_id uuid NOT NULL
+    product_id uuid NOT NULL
 );
 
 
@@ -546,7 +550,8 @@ CREATE TABLE public.variations_items (
     variation_id uuid NOT NULL,
     created_at timestamp without time zone NOT NULL,
     company_id uuid,
-    updated_at timestamp without time zone
+    updated_at timestamp without time zone,
+    index smallint NOT NULL
 );
 
 
@@ -668,7 +673,7 @@ COPY public.product_ingredients_groups (name, qtd_selection, _id, default_select
 -- Data for Name: product_variations; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.product_variations (_id, created_at, updated_at, variation_id, variation_item_id, sale_value, product_id, name, variation_name, cost_value) FROM stdin;
+COPY public.product_variations (_id, created_at, updated_at, variation_id, variation_item_id, sale_value, product_id, name, variation_name, cost_value, index) FROM stdin;
 \.
 
 
@@ -676,7 +681,7 @@ COPY public.product_variations (_id, created_at, updated_at, variation_id, varia
 -- Data for Name: products; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.products (_id, created_at, updated_at, name, description, is_active, cost_value, sale_value, product_type, measure, enable_delivery, enable_local, is_available, gtin, id, keywords, enable_online_sale, company_id, enable_stock_control, stock_movement_event) FROM stdin;
+COPY public.products (_id, created_at, updated_at, name, description, is_active, cost_value, sale_value, product_type, measure, enable_delivery, enable_local, is_available, gtin, id, keywords, enable_online_sale, company_id, enable_stock_control, stock_movement_event, picture_url, thumbnail_url, max_qtd) FROM stdin;
 \.
 
 
@@ -684,7 +689,7 @@ COPY public.products (_id, created_at, updated_at, name, description, is_active,
 -- Data for Name: products_categories; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.products_categories (_id, created_at, updated_at, category_id, productid_id) FROM stdin;
+COPY public.products_categories (_id, created_at, updated_at, category_id, product_id) FROM stdin;
 \.
 
 
@@ -733,8 +738,8 @@ COPY public.variations (_id, name, created_at, updated_at, company_id) FROM stdi
 -- Data for Name: variations_items; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.variations_items (_id, name, max_division, variation_id, created_at, company_id, updated_at) FROM stdin;
-21eb1baa-9b50-45cb-841e-360e097d62de	Tamanho único	1	60650904-58b9-4c5b-8aa5-f4c78e3caaeb	2025-02-27 13:53:23.465978	\N	\N
+COPY public.variations_items (_id, name, max_division, variation_id, created_at, company_id, updated_at, index) FROM stdin;
+21eb1baa-9b50-45cb-841e-360e097d62de	Tamanho único	1	60650904-58b9-4c5b-8aa5-f4c78e3caaeb	2025-02-27 13:53:23.465978	\N	\N	0
 \.
 
 
@@ -751,6 +756,8 @@ f0596cb1-0833-4b20-bf41-26ca4d0af59d	2025-02-09 17:29:16.09179	\N	4	0.4
 37ed2a89-e6eb-4a6d-ac5d-13de30652ae1	2025-02-27 13:53:23.307144	\N	6	0.6
 a2493861-b777-4b1d-86ad-4889510fb2d0	2025-02-27 13:53:23.512549	\N	7	0.7
 c0d1556e-a31c-4700-b7e9-4e1545435fb8	2025-02-27 13:53:23.785613	\N	8	0.8
+cdd20543-ae51-476c-9a4a-4137184d0492	2025-04-06 21:44:37.529504	\N	9	0.9
+6b7a38d5-78f3-4d9e-94de-057f6f09a733	2025-04-06 21:46:01.752262	\N	10	0.10
 \.
 
 
@@ -968,6 +975,13 @@ CREATE INDEX users_keywords_idx ON public.users USING gin (keywords);
 
 
 --
+-- Name: variation_item_index; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX variation_item_index ON public.variations_items USING btree (index) WITH (deduplicate_items='true');
+
+
+--
 -- Name: categories fk_categories_company_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1120,6 +1134,22 @@ ALTER TABLE ONLY public.product_ingredients_groups
 
 
 --
+-- Name: products_categories product_categories_category_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.products_categories
+    ADD CONSTRAINT product_categories_category_id FOREIGN KEY (category_id) REFERENCES public.categories(_id) NOT VALID;
+
+
+--
+-- Name: products_categories product_categories_product_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.products_categories
+    ADD CONSTRAINT product_categories_product_id FOREIGN KEY (product_id) REFERENCES public.products(_id) NOT VALID;
+
+
+--
 -- Name: product_combo_items product_combo_item_productid; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -1133,6 +1163,30 @@ ALTER TABLE ONLY public.product_combo_items
 
 ALTER TABLE ONLY public.product_ingredients
     ADD CONSTRAINT product_ingredients_group_id FOREIGN KEY (group_id) REFERENCES public.product_ingredients_groups(_id) NOT VALID;
+
+
+--
+-- Name: product_ingredients product_ingredients_ing_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.product_ingredients
+    ADD CONSTRAINT product_ingredients_ing_id FOREIGN KEY (ingredient_id) REFERENCES public.products(_id) NOT VALID;
+
+
+--
+-- Name: product_ingredients product_ingredients_prod_var_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.product_ingredients
+    ADD CONSTRAINT product_ingredients_prod_var_id FOREIGN KEY (product_variation_id) REFERENCES public.product_variations(_id) NOT VALID;
+
+
+--
+-- Name: product_ingredients product_ingredients_product_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.product_ingredients
+    ADD CONSTRAINT product_ingredients_product_id FOREIGN KEY (product_id) REFERENCES public.products(_id) NOT VALID;
 
 
 --

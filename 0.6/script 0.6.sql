@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS public.variations
     name character varying(30) COLLATE pg_catalog."default" NOT NULL,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone,
-    company_id uuid NOT NULL,
+    company_id uuid,
     CONSTRAINT variations_pkey PRIMARY KEY (_id),
     CONSTRAINT fk_variation_company_id FOREIGN KEY (company_id)
         REFERENCES public.companies (_id) MATCH SIMPLE
@@ -23,8 +23,8 @@ CREATE TABLE public.variations_items
     max_division smallint NOT NULL DEFAULT '1'::smallint,
     variation_id uuid NOT NULL,
     created_at timestamp without time zone NOT NULL,
+    company_id uuid,
     updated_at timestamp without time zone,
-    company_id uuid NOT NULL,
     CONSTRAINT variations_items_pkey PRIMARY KEY (_id),
     CONSTRAINT fk_variation_items_company_id FOREIGN KEY (company_id)
         REFERENCES public.companies (_id) MATCH SIMPLE
@@ -40,14 +40,7 @@ CREATE TABLE public.variations_items
 
 ALTER TABLE IF EXISTS public.variations_items
     OWNER to postgres;
-
-ALTER TABLE IF EXISTS public.variations_items
-    ADD CONSTRAINT fk_variation_items_variation_id FOREIGN KEY (variation_id)
-    REFERENCES public.variations (_id) MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE CASCADE
-    NOT VALID;
-
+    
 CREATE TABLE IF NOT EXISTS public.categories
 (
     _id uuid NOT NULL,
@@ -149,13 +142,8 @@ CREATE TABLE IF NOT EXISTS public.product_variations
         NOT VALID
 );
 
-TABLESPACE pg_default;
-
 ALTER TABLE IF EXISTS public.product_variations
     OWNER to postgres;
-
-INSERT INTO VARIATIONS ("_id", "name", "max_division", "variation_id", "created_at", "company_id") 
-VALUES ("87f5b161-50a3-4de5-be45-ab0e9e53cc43","Tam.Único",1,"c8c5cc58-779d-4ca5-8a0c-6056dace282d","2024-05-10 09:26:02","4fe26198-700b-4bac-8401-a326f0ba3718");
 
 -- Table: public.config
 
@@ -177,8 +165,6 @@ CREATE TABLE IF NOT EXISTS public.config
         ON DELETE CASCADE
         NOT VALID
 );
-
-TABLESPACE pg_default;
 
 ALTER TABLE IF EXISTS public.config
     OWNER to postgres;
@@ -203,7 +189,6 @@ CREATE TABLE IF NOT EXISTS public.product_ingredients
     cost_value numeric(12,2),
     CONSTRAINT product_ingredients_pkey PRIMARY KEY (_id)
 );
-TABLESPACE pg_default;
 
 ALTER TABLE IF EXISTS public.product_ingredients
     OWNER to postgres;

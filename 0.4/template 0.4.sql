@@ -103,8 +103,6 @@ ALTER TEXT SEARCH CONFIGURATION public.pt
 
 ALTER TEXT SEARCH CONFIGURATION public.pt OWNER TO postgres;
 
-SET default_tablespace = '';
-
 SET default_table_access_method = heap;
 
 --

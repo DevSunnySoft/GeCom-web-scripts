@@ -14,9 +14,7 @@ CREATE TABLE IF NOT EXISTS public.sales_campaigns
     keywords character varying COLLATE pg_catalog."default" NOT NULL,
     company_id uuid,
     CONSTRAINT sales_campaigns_pkey PRIMARY KEY (_id)
-)
-
-TABLESPACE pg_default;
+);
 
 ALTER TABLE IF EXISTS public.sales_campaigns
     OWNER to postgres;
@@ -40,9 +38,7 @@ CREATE TABLE IF NOT EXISTS public.sales_campaign_items
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
         NOT VALID
-)
-
-TABLESPACE pg_default;
+);
 
 ALTER TABLE IF EXISTS public.sales_campaign_items
     OWNER to postgres;

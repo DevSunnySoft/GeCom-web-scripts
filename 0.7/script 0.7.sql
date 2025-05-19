@@ -29,11 +29,11 @@ BEGIN
     
     -- Inserts a default variation for unique size
     INSERT INTO public.variations (_id, name, created_at, company_id) 
-    VALUES (variation_id, 'Padrão', CURRENT_TIMESTAMP, company_id);
+    VALUES (variation_id, 'Padrão', CURRENT_TIMESTAMP, null);
 
     -- Inserts a default size for unique size
     INSERT INTO public.variations_items (_id, name, created_at, variation_id, max_division, company_id) 
-    VALUES (uuid_generate_v4(), 'Tamanho único', CURRENT_TIMESTAMP, variation_id, 1, company_id);
+    VALUES (uuid_generate_v4(), 'Tamanho único', CURRENT_TIMESTAMP, variation_id, 1, null);
 
     -- creates a default config parameter setting the default variation
     INSERT INTO public.config (_id, value, description, company_id, param, created_at) 
@@ -41,6 +41,41 @@ BEGIN
     COMMIT;
 END;
 $$;
+
+CREATE OR REPLACE PROCEDURE public.create_config_default()
+LANGUAGE plpgsql
+AS $$
+-- creates a variable that holds company_id
+DECLARE company_id uuid;
+-- creates a variable that holds variation_id
+DECLARE variation_id uuid;
+BEGIN
+    -- generates a random uuid
+    variation_id = uuid_generate_v4();
+
+    -- gets the first company
+    SELECT _id INTO company_id FROM public.companies LIMIT 1;
+    
+    -- Inserts a default variation for unique size
+    INSERT INTO public.variations (_id, name, created_at, company_id) 
+    VALUES (variation_id, 'Padrão', CURRENT_TIMESTAMP, null);
+
+    -- Inserts a default size for unique size
+    INSERT INTO public.variations_items (_id, name, created_at, variation_id, max_division, company_id) 
+    VALUES (uuid_generate_v4(), 'Tamanho único', CURRENT_TIMESTAMP, variation_id, 1, null);
+
+    -- creates a default config parameter setting the default variation
+    INSERT INTO public.config (_id, value, description, company_id, param, created_at) 
+    VALUES (uuid_generate_v4(), variation_id, 'Variação padrão', company_id, 'defaultVariation', CURRENT_TIMESTAMP);
+    COMMIT;
+END;
+$$;
+
+-- calls the procedure to create config default
+CALL public.create_config_default();
+
+-- delete the procedure
+DROP PROCEDURE IF EXISTS public.create_config_default;
 
 ALTER TABLE IF EXISTS public.product_ingredients
     ADD COLUMN group_id uuid;
@@ -120,9 +155,7 @@ CREATE TABLE IF NOT EXISTS public.observation_groups
     qtd_selection smallint NOT NULL DEFAULT '1'::smallint,
     keywords character varying COLLATE pg_catalog."default",
     CONSTRAINT observation_groups_pkey PRIMARY KEY (_id)
-)
-
-TABLESPACE pg_default;
+);
 
 ALTER TABLE IF EXISTS public.observation_groups
     OWNER to postgres;
@@ -141,19 +174,10 @@ CREATE TABLE IF NOT EXISTS public.observations
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
         NOT VALID
-)
-
-TABLESPACE pg_default;
+);
 
 ALTER TABLE IF EXISTS public.observations
     OWNER to postgres;
-
-ALTER TABLE IF EXISTS public.observations
-    ADD CONSTRAINT fk_observations_group_id FOREIGN KEY (observation_group_id)
-    REFERENCES public.observation_groups (_id) MATCH SIMPLE
-    ON UPDATE NO ACTION
-    ON DELETE NO ACTION
-    NOT VALID;
 
 
 CREATE TABLE public.observation_categories
@@ -201,9 +225,7 @@ CREATE TABLE IF NOT EXISTS public.observation_ingredients
         REFERENCES public.observations (_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE NO ACTION
-)
-
-TABLESPACE pg_default;
+);
 
 ALTER TABLE IF EXISTS public.observation_ingredients
     OWNER to postgres;
@@ -220,15 +242,11 @@ CREATE TABLE IF NOT EXISTS public.additional_categories
     category_id uuid NOT NULL,
     additional_id uuid NOT NULL,
     CONSTRAINT additional_categories_pkey PRIMARY KEY (_id)
-)
-
-TABLESPACE pg_default;
+);
 
 ALTER TABLE IF EXISTS public.additional_categories
     OWNER to postgres;
 
-ALTER TABLE public.products
-    ALTER COLUMN max_qtd TYPE numeric(12, 2);
 
 DROP TABLE IF EXISTS public.products_categories;
 
@@ -238,11 +256,9 @@ CREATE TABLE IF NOT EXISTS public.products_categories
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone,
     category_id uuid NOT NULL,
-    productid_id uuid NOT NULL,
+    product_id uuid NOT NULL,
     CONSTRAINT products_categories_pkey PRIMARY KEY (_id)
-)
-
-TABLESPACE pg_default;
+);
 
 ALTER TABLE IF EXISTS public.products_categories
     OWNER to postgres;
